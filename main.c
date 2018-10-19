@@ -16,7 +16,7 @@ int min(int a, int b, int c);
 
 //Color->Greyscale->B&W + line detection
 void lineSight(SDL_Surface *img, int* nbLines);
-void rowSight(SDL_Surface *img,int *line[maxHeight][img->w], unsigned long x, unsigned long y);
+void rowSight(SDL_Surface *img, unsigned long x, unsigned long y);
 
 int main()
 {
@@ -233,7 +233,6 @@ void lineSight(SDL_Surface *img, int* nbLines)
 			putpixel(img, j, i, SDL_MapRGB(img->format, rpix, gpix, bpix));
 
             		//Updating tempLine
-            		tempLine[j] = rpix;
 		}
 
 		if(isWhiteLine == 1) //If the line  is white, then we are not parsing text
@@ -262,7 +261,7 @@ void lineSight(SDL_Surface *img, int* nbLines)
         }
 	}
 
-	int *fullLine[maxHeight][img->w];
+	int fullLine[maxHeight][img->w];
 	for(int i = 0;i<maxHeight;i++)
 	{
 		for(int j = 0;j<img->w;j++)
@@ -289,71 +288,80 @@ void lineSight(SDL_Surface *img, int* nbLines)
 
 		if(isWhiteLine == 1) //If the line  is white, then we are not parsing text
 	    	{
+
             		if(isptl == 1)// If we were parsing text the pixel line before
             		{
                 		isptl = 0; //Then we are not anymore
+				for(int k=0;k<img->w;k++)
+				{
+					printf("k : %d\n", k);
+					fullLine[tempHeight][k] = tempLine[k];
+				}
+				printf("COUCOU");
+				//Insert a rowSight call
+				int k=0;
+				while(fullLine[tempHeight/2][k] != 128)
+					k++;
+				rowSight(img, k, tempHeight/2+i);
             		}
+			tempHeight = 0;
         	}
         	else if(isptl == 0)
         	{
-			for(int k=0;k<img->w;k++)
-				*fullLine[tempHeight][k] = tempLine[k];
-			int k=0;
-			while(*fullLine[tempHeight/2][k] != 128)
-				k++;
-			rowSight(img, &fullLine, tempHeight/2, k);
-
 			tempHeight++;
             		isptl = 1;
         	}
         	else
-        	{
-			for(int k=0;k<img->w;k++)
-				*fullLine[tempHeight][k] = tempLine[k];
-			//Insert a rowSight call
-			int k=0;
-			while(*fullLine[tempHeight/2][k] != 128)
-				k++;
-			rowSight(img, &fullLine, tempHeight/2, k);
-
 			tempHeight++;
-        	}
 	}
-
-
-
 
        free(tempLine);
 
 }
 
-void rowSight(SDL_Surface *img,int *line[maxHeight][img->w], unsigned long x, unsigned long y)
+void rowSight(SDL_Surface *img, unsigned long x, unsigned long y)
 {
 	printf("x:%lu  y:%lu \n", x, y);
 	//This function is a recursive character recognition function
 	//It is like the bucket fill tool in GIMP or Photoshop
-    	
-    	if(*line[x-1][y] == 128)
+    
+
+	Uint32 pix = getpixel(img, x-1, y);
+	Uint8 rpix=0, gpix=0, bpix=0;
+	SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
+			
+
+    	if(rpix == 128)
 	{
-		putpixel(img, x, y, SDL_MapRGB(img->format, 0, 0, 0));
-		rowSight(img, line, x-1, y);
-	}
-	
-	if(*line[x+1][y] == 128)
-	{
-		putpixel(img, x, y, SDL_MapRGB(img->format, 0, 0, 0));
-		rowSight(img, line, x+1, y);
+		putpixel(img, x-1, y, SDL_MapRGB(img->format, 0, 0, 0));
+		rowSight(img, x-1, y);
 	}
 
-	if(*line[x][y-1] == 128)
+	pix = getpixel(img, x+1, y);
+	SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
+
+
+	if(rpix == 128)
 	{
-		putpixel(img, x, y, SDL_MapRGB(img->format, 0, 0, 0));
-		rowSight(img, line, x, y-1);
+		putpixel(img, x+1, y, SDL_MapRGB(img->format, 0, 0, 0));
+		rowSight(img, x+1, y);
 	}
 
-	if(*line[x][y+1] == 128)
+	pix = getpixel(img, x, y-1);
+	SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
+
+	if(rpix == 128)
 	{
-		putpixel(img, x, y, SDL_MapRGB(img->format, 0, 0, 0));
-		rowSight(img, line, x, y+1);
+		putpixel(img, x, y-1, SDL_MapRGB(img->format, 0, 0, 0));
+		rowSight(img, x, y-1);
+	}
+
+	pix = getpixel(img, x, y+1);
+	SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
+
+	if(rpix == 128)
+	{
+		putpixel(img, x, y+1, SDL_MapRGB(img->format, 0, 0, 0));
+		rowSight(img, x, y+1);
 	}
 }
