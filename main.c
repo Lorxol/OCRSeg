@@ -12,6 +12,9 @@ void putpixel(SDL_Surface *surface, int x, int y, Uint32 pixel);
 
 //Just to save some space: initialize tcm to 0
 void cleantcm();
+void printtcm();
+//Because I suck at coding
+void transpo();
 
 //Obvious
 int max(int a, int b, int c);
@@ -20,7 +23,7 @@ int min(int a, int b, int c);
 //Color->Greyscale->B&W + line detection
 void lineSight(SDL_Surface *img, int* nbLines);
 //Recursive character detection
-void rowSight(SDL_Surface *img, unsigned long x, unsigned long y);
+void rowSight(SDL_Surface *img, unsigned long x, unsigned long y, int xtcm, int ytcm);
 
 int main()
 {
@@ -163,7 +166,7 @@ void lineSight(SDL_Surface *img, int* nbLines)
                 isptl = 0; //Then we are not anymore
                 *nbLines = *nbLines + 1; //We increment the number of lines we read
         		for(int j=0;j<img->w;j++) //We draw a red line
-	    		    putpixel(img, j, i-1, SDL_MapRGB(img->format, 255, 0, 0));
+	    		    putpixel(img, j, i, SDL_MapRGB(img->format, 255, 0, 0));
                 if(tempMax > maxHeight) //We test the height of this line
                     maxHeight = tempMax; //And compare it to the greater we have
                 tempMax = 0; //Resetting the temp height of the line
@@ -220,9 +223,12 @@ void lineSight(SDL_Surface *img, int* nbLines)
 						SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
 						if(rpix == 128)
 						{
+							tcm[0][l-i-1-tempHeight] = 1;
 							putpixel(img, k, l, SDL_MapRGB(img->format, 0, 0, 0));
-							rowSight(img, k, l);
-
+							rowSight(img, k, l, 0, 16);
+							transpo();
+							printtcm();
+							printf("\n");
 //This is the core of the program. We should stock the character detected
 //in a matrix and call the neural network right HERE
 							cleantcm();
@@ -245,7 +251,7 @@ void lineSight(SDL_Surface *img, int* nbLines)
 
 }
 
-void rowSight(SDL_Surface *img, unsigned long x, unsigned long y)
+void rowSight(SDL_Surface *img, unsigned long x, unsigned long y, int xtcm, int ytcm)
 {
 	//This function is a recursive character recognition function
 	//It is like the bucket fill tool in GIMP or Photoshop
@@ -258,8 +264,9 @@ void rowSight(SDL_Surface *img, unsigned long x, unsigned long y)
 
     	if(rpix == 128)
 	{
+		tcm[xtcm-1][ytcm] = 2;
 		putpixel(img, x-1, y, SDL_MapRGB(img->format, 0, 0, 0));
-		rowSight(img, x-1, y);
+		rowSight(img, x-1, y, xtcm-1, ytcm);
 	}
 
 	pix = getpixel(img, x+1, y);
@@ -268,8 +275,9 @@ void rowSight(SDL_Surface *img, unsigned long x, unsigned long y)
 
 	if(rpix == 128)
 	{
+		tcm[xtcm+1][ytcm] = 2;
 		putpixel(img, x+1, y, SDL_MapRGB(img->format, 0, 0, 0));
-		rowSight(img, x+1, y);
+		rowSight(img, x+1, y, xtcm+1, ytcm);
 	}
 
 	pix = getpixel(img, x, y-1);
@@ -277,8 +285,9 @@ void rowSight(SDL_Surface *img, unsigned long x, unsigned long y)
 
 	if(rpix == 128)
 	{
+		tcm[xtcm][ytcm-1] = 2;
 		putpixel(img, x, y-1, SDL_MapRGB(img->format, 0, 0, 0));
-		rowSight(img, x, y-1);
+		rowSight(img, x, y-1, xtcm, ytcm-1);
 	}
 
 	pix = getpixel(img, x, y+1);
@@ -286,8 +295,9 @@ void rowSight(SDL_Surface *img, unsigned long x, unsigned long y)
 
 	if(rpix == 128)
 	{
+		tcm[xtcm][ytcm+1] = 2;
 		putpixel(img, x, y+1, SDL_MapRGB(img->format, 0, 0, 0));
-		rowSight(img, x, y+1);
+		rowSight(img, x, y+1, xtcm, ytcm+1);
 	}
 }
 
@@ -383,4 +393,29 @@ void cleantcm()
 			tcm[i][j] = 0;
 	}
 
+}
+
+void printtcm()
+{
+	for(int i=0;i<32;i++)
+	{
+		for(int j=0;j<32;j++)
+			printf("%d ",tcm[i][j]);
+		printf("\n");
+	}
+}
+
+void transpo()
+{
+	int temptcm[32][32];
+	for(int i=0;i<32;i++)
+	{
+		for(int j=0;j<32;j++)
+			temptcm[i][j] = tcm[i][j];
+	}
+	for(int i=0;i<32;i++)
+	{
+		for(int j=0;j<32;j++)
+			tcm[i][j] = temptcm[j][i];
+	}
 }
