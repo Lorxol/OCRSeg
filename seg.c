@@ -25,8 +25,10 @@ int seg(SDL_Surface *img)
 void lineSight(SDL_Surface *img)
 {
 
-	Uint8 rpix=0, gpix=0, bpix=0; //Temp variables for storing pixel color
-	unsigned long bwthreshold = 0; //Defines which pixel will be white or black
+	Uint8 rpix=0, gpix=0, bpix=0; 
+        //Temp variables for storing pixel color
+	unsigned long bwthreshold = 0; 
+        //Defines which pixel will be white or black
     Uint8 isptl = 0; //Is parsing text line (boolean)
     Uint8 *tempLine = NULL;
     tempLine = malloc(img->w * sizeof(Uint8));
@@ -35,17 +37,17 @@ void lineSight(SDL_Surface *img)
 
     for(int i=0;i<img->h;i++)
 	{
-		for(int j=0;j<img->w;j++)
-		{
-			Uint32 pix = getpixel(img, j, i); //two last param are pixel coordinates
+	 for(int j=0;j<img->w;j++)
+	 {
+	  Uint32 pix = getpixel(img, j, i);
 
-			//Initializing rgb components for current pixel color
-			SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
-            		//Translating current colors to greyscaled ones
-			rpix = (max(rpix,bpix,rpix)+min(rpix,bpix,gpix))/2;
-            		bwthreshold += (rpix);
+	  //Initializing rgb components for current pixel color
+	  SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
+          //Translating current colors to greyscaled ones
+	  rpix = (max(rpix,bpix,rpix)+min(rpix,bpix,gpix))/2;
+          bwthreshold += (rpix);
 
-    		}
+    	}
 	}
 
     //Bwthreshold is calculated as the average color of the picture
@@ -54,57 +56,60 @@ void lineSight(SDL_Surface *img)
     bwthreshold /= nbPix;
 
 
-    //So this big loop mainly transform the image into a greyscaled image then in a B&W one.
-    //Also, it does the "horizontal line detection" for the neural network later.
+    //Also, it does the "horizontal line detection" 
+    //for the neural network later.
 
 	for(int i=0;i<img->h;i++)
 	{
-        	Uint8 isWhiteLine = 1;
+         Uint8 isWhiteLine = 1;
 
-		for(int j=0;j<img->w;j++)
-		{
-			Uint32 pix = getpixel(img, j, i); //two last param are pixel coordinates
+	 for(int j=0;j<img->w;j++)
+	 {
+	  Uint32 pix = getpixel(img, j, i);
 
-			//Initializing rgb components for current pixel color
-			SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
-			//But we want a B&W image, so we have to supress the greyscale
-			if(rpix < bwthreshold) //If the pixel is sufficiently dark
-			{
-				rpix = 128;
-				gpix = 0;
-				bpix = 0;
-                		isWhiteLine = 0; //there is pixel of text in the line
-			}
-			else
-			{
-				rpix = 255;
-				gpix = rpix;
-				bpix = rpix;
-			}
+	 //Initializing rgb components for current pixel color
+	 SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
+	 //But we want a B&W image, 
+         //so we have to supress the greyscale
+	 if(rpix < bwthreshold) //If the pixel is sufficiently dark
+	 {
+	   rpix = 128;
+	   gpix = 0;
+	   bpix = 0;
+           isWhiteLine = 0; //there is pixel of text in the line
+	 }
+	 else
+	{
+	 rpix = 255;
+	 gpix = rpix;
+	 bpix = rpix;
+	}
 
-			//Setting new B&W colors to img
-			putpixel(img, j, i, SDL_MapRGB(img->format, rpix, gpix, bpix));
+	//Setting new B&W colors to img
+putpixel(img, j, i, SDL_MapRGB(img->format, rpix, gpix, bpix));
 
-		}
+	}
 
-		if(isWhiteLine == 1) //If the line  is white, then we are not parsing text
-	    {
-            if(isptl == 1)// If we were parsing text the pixel line before
+	if(isWhiteLine == 1) 
+        //If the line  is white, then we are not parsing text
+	{
+           if(isptl == 1)// If we were parsing text the pixel line before
             {
-                isptl = 0; //Then we are not anymore
-        		for(int j=0;j<img->w;j++) //We draw a red line
-	    		    putpixel(img, j, i, SDL_MapRGB(img->format, 255, 0, 0));
-                if(tempMax > maxHeight) //We test the height of this line
-                    maxHeight = tempMax; //And compare it to the greater we have
-                tempMax = 0; //Resetting the temp height of the line
+             isptl = 0; //Then we are not anymore
+             for(int j=0;j<img->w;j++) //We draw a red line
+	        putpixel(img, j, i, SDL_MapRGB(img->format, 255, 0, 0));
+             if(tempMax > maxHeight) //We test the height of this line
+                maxHeight = tempMax; 
+             //And compare it to the greater we have
+            tempMax = 0; //Resetting the temp height of the line
             }
         }
         else if(isptl == 0)
         {
-            isptl = 1;
-            tempMax++;
-    		for(int j=0;j<img->w;j++)
-			    putpixel(img, j, i, SDL_MapRGB(img->format, 255, 0, 0));
+         isptl = 1;
+         tempMax++;
+    	 for(int j=0;j<img->w;j++)
+	   putpixel(img, j, i, SDL_MapRGB(img->format, 255, 0, 0));
         }
         else
         {
@@ -119,70 +124,70 @@ void lineSight(SDL_Surface *img)
 	unsigned long tempHeight = 0;
 	for(int i=0;i<img->h;i++)
 	{
-        	Uint8 isWhiteLine = 1;
+         Uint8 isWhiteLine = 1;
 
-		for(int j=0;j<img->w;j++)
-		{
-			Uint32 pix = getpixel(img, j, i); //two last param are pixel coordinates
+	 for(int j=0;j<img->w;j++)
+	 {
+	  Uint32 pix = getpixel(img, j, i);
 
-			//Initializing rgb components for current pixel color
-			SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
-			//But we want a B&W image, so we have to supress the greyscale:
-			if(rpix == 128) //If the pixel is sufficiently dark
-			{
-                		isWhiteLine = 0; //there is pixel of text in the line
-			}
-            		tempLine[j] = rpix;
-		}
+	  SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
+	 if(rpix == 128) //If the pixel is sufficiently dark
+	{
+           isWhiteLine = 0; //there is pixel of text in the line
+	}
+          tempLine[j] = rpix;
+	 }
 
-		if(isWhiteLine == 1) //If the line  is white, then we are not parsing text
-	    	{
+	if(isWhiteLine == 1)
+	{
 
-            		if(isptl == 1)// If we were parsing text the pixel line before
-            		{
-                		isptl = 0; //Then we are not anymore
-				Uint32 pix = 0;
-				for(int k = 0;k<img->w;k++)
-				{
-					for(int l=i-1-tempHeight;l<i-1;l++)
-					{
-						pix = getpixel(img, k, l);
-						SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
-						if(rpix == 128)
-						{
-							tcm[0][16] = 1;
-							putpixel(img, k, l, SDL_MapRGB(img->format, 0, nbchar, 0));
-							rowSight(img, k, l, 0, 16, nbchar);
-							transpo();
-							/*printtcm();
-							printf("\n");*/
+         if(isptl == 1)
+         {
+           isptl = 0; //Then we are not anymore
+	   Uint32 pix = 0;
+	   for(int k = 0;k<img->w;k++)
+	   {
+	     for(int l=i-1-tempHeight;l<i-1;l++)
+	        {
+		 pix = getpixel(img, k, l);
+		 SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
+		 if(rpix == 128)
+		 {
+		  tcm[0][16] = 1;
+		  putpixel(img, k, l, SDL_MapRGB(img->format, 0, nbchar, 0));
+		  rowSight(img, k, l, 0, 16, nbchar);
+		  transpo();
+		  /*printtcm();
+		  printf("\n");*/
+
 //This is the core of the program. We should stock the character detected
 //in a matrix and call the neural network right HERE
-							cleantcm();
-							if(nbchar+30 <= 255)
-								nbchar+= 30;
-							else
-								nbchar = 0;
-						}
-					}
-				}
-            		}
-			tempHeight = 0;
-        	}
-        	else if(isptl == 0)
-        	{
-			tempHeight++;
-            		isptl = 1;
-        	}
-        	else
-			tempHeight++;
-	}
+		  cleantcm();
+		  if(nbchar+30 <= 255)
+		    nbchar+= 30;
+		  else
+		    nbchar = 0;
+		 }
+		}
+	   }
+         }
+	 tempHeight = 0;
+        }
+        else if(isptl == 0)
+        {
+	 tempHeight++;
+         isptl = 1;
+        }
+        else
+	 tempHeight++;
+   }
 
-       free(tempLine);
+   free(tempLine);
 
 }
 
-void rowSight(SDL_Surface *img, unsigned long x, unsigned long y, int xtcm, int ytcm, unsigned int nbchar)
+void rowSight(SDL_Surface *img, unsigned long x, unsigned long y, 
+                int xtcm, int ytcm, unsigned int nbchar)
 {
 	//This function is a recursive character recognition function
 	//It is like the bucket fill tool in GIMP or Photoshop

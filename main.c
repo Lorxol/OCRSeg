@@ -10,20 +10,27 @@ int main(int argc, char **argv)
 	char path[50] = "img_files/";
 	strcat(path, argv[1]);
 	strcat(path,".bmp");
+        SDL_Event ev;
+
+        if(argc != 2)
+        {
+          printf("Error invalid number of arguments.");
+          return EXIT_FAILURE;
+        }
 
     	//Initializing SDL
-	if(SDL_Init(SDL_INIT_VIDEO) != 0)
+	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0)
 	{
-		fprintf(stderr, "Init SDL failure:%s\n", SDL_GetError());
-		return EXIT_FAILURE;
+	  fprintf(stderr, "Init SDL failure:%s\n", SDL_GetError());
+	  return EXIT_FAILURE;
 	}
 
 	//Loading first bmp picture
 	SDL_Surface* img = SDL_LoadBMP(path);
 	if (img == NULL)
 	{
-		fprintf(stderr, "Get image bmp failure:%s\n", SDL_GetError());
-		return EXIT_FAILURE;
+          fprintf(stderr, "Get image bmp failure:%s\n", SDL_GetError());
+          return EXIT_FAILURE;
 	}
 
 	//Dimensions of the window
@@ -32,12 +39,13 @@ int main(int argc, char **argv)
 
 
 	//Creating window
-	SDL_Window*  wd = SDL_CreateWindow("SDL_temp", SDL_WINDOWPOS_UNDEFINED,  SDL_WINDOWPOS_UNDEFINED, wd_w, wd_h, SDL_WINDOW_SHOWN);
+	SDL_Window*  wd = SDL_CreateWindow("SDL_temp", SDL_WINDOWPOS_UNDEFINED,
+        SDL_WINDOWPOS_UNDEFINED, wd_w, wd_h, SDL_WINDOW_SHOWN);
 
 	if (!wd)
 	{
-		fprintf(stderr, "Init SDL Window failure:%s\n", SDL_GetError());
-		return EXIT_FAILURE;
+	  fprintf(stderr, "Init SDL Window failure:%s\n", SDL_GetError());
+	  return EXIT_FAILURE;
 	}
 	
 	
@@ -55,9 +63,15 @@ int main(int argc, char **argv)
 	//Moving img from buffer to screen
 	SDL_UpdateWindowSurface(wd);
 
-
-
-	SDL_Delay(10000);
+        while(SDL_WaitEvent(&ev) >= 0)
+          {
+            switch(ev.type)
+             {
+               case SDL_QUIT:
+                 return 0;
+               break;
+             }
+          }
 
 
 	//Exiting properly SDL
