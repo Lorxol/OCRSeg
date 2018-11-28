@@ -1,3 +1,5 @@
+
+
 --- README OCR PROGRAM ---
 
 * The aim of this program is to detect text on a given bmp image 
@@ -7,7 +9,8 @@ and convert it into a string.
 
 * How do I use the program ?
 
-        -> type "./main name_of_the_image"
+        -> type "./main name_of_the_image" to show segmentation 
+	   or "./main xor" if you want to print the neural network outputs
 
         -> WARNING: the picture's name MUST NOT contain the format extension
            for example, type "epiclim" and not "epiclim.bmp"
@@ -15,3 +18,8 @@ and convert it into a string.
 * If the program is not compiled, you can do it using the following command:
         -> "gcc -Wall -Wextra -Werror -std=c99 -O1 -o main *.c
            `sdl2-config --cflags --libs`"
+	-> You can also type "make"
+
+--- THE END ---
+
+

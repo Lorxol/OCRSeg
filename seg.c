@@ -25,9 +25,9 @@ int seg(SDL_Surface *img)
 void lineSight(SDL_Surface *img)
 {
 
-	Uint8 rpix=0, gpix=0, bpix=0; 
+	Uint8 rpix=0, gpix=0, bpix=0;
         //Temp variables for storing pixel color
-	unsigned long bwthreshold = 0; 
+	unsigned long bwthreshold = 0;
         //Defines which pixel will be white or black
     Uint8 isptl = 0; //Is parsing text line (boolean)
     Uint8 *tempLine = NULL;
@@ -56,7 +56,7 @@ void lineSight(SDL_Surface *img)
     bwthreshold /= nbPix;
 
 
-    //Also, it does the "horizontal line detection" 
+    //Also, it does the "horizontal line detection"
     //for the neural network later.
 
 	for(int i=0;i<img->h;i++)
@@ -69,7 +69,7 @@ void lineSight(SDL_Surface *img)
 
 	 //Initializing rgb components for current pixel color
 	 SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
-	 //But we want a B&W image, 
+	 //But we want a B&W image,
          //so we have to supress the greyscale
 	 if(rpix < bwthreshold) //If the pixel is sufficiently dark
 	 {
@@ -90,7 +90,7 @@ putpixel(img, j, i, SDL_MapRGB(img->format, rpix, gpix, bpix));
 
 	}
 
-	if(isWhiteLine == 1) 
+	if(isWhiteLine == 1)
         //If the line  is white, then we are not parsing text
 	{
            if(isptl == 1)// If we were parsing text the pixel line before
@@ -99,7 +99,7 @@ putpixel(img, j, i, SDL_MapRGB(img->format, rpix, gpix, bpix));
              for(int j=0;j<img->w;j++) //We draw a red line
 	        putpixel(img, j, i, SDL_MapRGB(img->format, 255, 0, 0));
              if(tempMax > maxHeight) //We test the height of this line
-                maxHeight = tempMax; 
+                maxHeight = tempMax;
              //And compare it to the greater we have
             tempMax = 0; //Resetting the temp height of the line
             }
@@ -120,7 +120,7 @@ putpixel(img, j, i, SDL_MapRGB(img->format, rpix, gpix, bpix));
 
 	//In this loop we detect all the characters and stock them
 	//And we finally put our text pixels in black
-	unsigned int nbchar = 0;
+	unsigned int nbchar = 1;
 	unsigned long tempHeight = 0;
 	for(int i=0;i<img->h;i++)
 	{
@@ -145,17 +145,50 @@ putpixel(img, j, i, SDL_MapRGB(img->format, rpix, gpix, bpix));
          {
            isptl = 0; //Then we are not anymore
 	   Uint32 pix = 0;
+
+	   int hist[img->w], sum=0;
+
 	   for(int k = 0;k<img->w;k++)
 	   {
+	     int pixcount = 0;
 	     for(int l=i-1-tempHeight;l<i-1;l++)
-	        {
+	      {
 		 pix = getpixel(img, k, l);
+		 SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
+		 if(rpix == 128)
+		   pixcount++;
+	      }
+	     hist[k] = pixcount;
+	     sum += hist[k];
+	     pixcount = 0;
+	   }
+	   //printf("Av hist : %d\n", sum/img->w);
+	   int cthreshold = 2, z=0;
+	   while(z< img->w)
+	    {
+	   while(hist[z] < cthreshold)
+	   {//On parcourt les blancs
+		z++;
+	   }
+	   int y = z;
+	   while(hist[y] >= cthreshold)
+	   {//On est dans une lettre
+		y++;
+	   }
+	   // On trace une ligne verticale bleue
+	   for(int l=i-1-tempHeight;l<i-1;l++)
+	      putpixel(img, z-1, l, SDL_MapRGB(img->format, 0, 0, 200));
+	   for(;z<y;z++)
+	    {
+	     for(int l=i-1-tempHeight;l<i-1;l++)
+	      {
+		 pix = getpixel(img, z, l);
 		 SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
 		 if(rpix == 128)
 		 {
 		  tcm[0][16] = 1;
-		  putpixel(img, k, l, SDL_MapRGB(img->format, 0, nbchar, 0));
-		  rowSight(img, k, l, 0, 16, nbchar);
+		  //putpixel(img, z, l, SDL_MapRGB(img->format, 0, nbchar, 0));
+		  rowSight(img, z, l, 0, 16, nbchar, y);
 		  transpo();
 		  /*printtcm();
 		  printf("\n");*/
@@ -163,14 +196,19 @@ putpixel(img, j, i, SDL_MapRGB(img->format, rpix, gpix, bpix));
 //This is the core of the program. We should stock the character detected
 //in a matrix and call the neural network right HERE
 		  cleantcm();
-		  if(nbchar+30 <= 255)
-		    nbchar+= 30;
-		  else
-		    nbchar = 0;
+
 		 }
-		}
+	      }
+	    }
+		  if(nbchar == 1)
+		    nbchar+= 1;
+		  else
+		    nbchar = 1;
+	   // On trace une ligne verticale bleue
+	   for(int l=i-1-tempHeight;l<i-1;l++)
+	      putpixel(img, z, l, SDL_MapRGB(img->format, 0, 0, 200));
 	   }
-         }
+	  }
 	 tempHeight = 0;
         }
         else if(isptl == 0)
@@ -186,13 +224,14 @@ putpixel(img, j, i, SDL_MapRGB(img->format, rpix, gpix, bpix));
 
 }
 
-void rowSight(SDL_Surface *img, unsigned long x, unsigned long y, 
-                int xtcm, int ytcm, unsigned int nbchar)
+void rowSight(SDL_Surface *img, unsigned long x, unsigned long y,
+                int xtcm, int ytcm, unsigned int nbchar
+		, unsigned long maxWidth)
 {
 	//This function is a recursive character recognition function
 	//It is like the bucket fill tool in GIMP or Photoshop
-    
-
+	if(x <= maxWidth)
+	{
 	Uint32 pix = getpixel(img, x-1, y);
 	Uint8 rpix=0, gpix=0, bpix=0;
 	SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
@@ -201,8 +240,13 @@ void rowSight(SDL_Surface *img, unsigned long x, unsigned long y,
     	if(rpix == 128)
 	{
 		tcm[xtcm-1][ytcm] = 2;
-		putpixel(img, x-1, y, SDL_MapRGB(img->format, 0, nbchar, 0));
-		rowSight(img, x-1, y, xtcm-1, ytcm, nbchar);
+		if(nbchar == 1)
+		 putpixel(img, x-1, y, SDL_MapRGB(img->format, 0, 0, 0));
+		else if(nbchar == 2)
+		 putpixel(img, x-1, y, SDL_MapRGB(img->format, 45, 205, 115));
+
+
+		rowSight(img, x-1, y, xtcm-1, ytcm, nbchar, maxWidth);
 	}
 
 	pix = getpixel(img, x+1, y);
@@ -212,18 +256,28 @@ void rowSight(SDL_Surface *img, unsigned long x, unsigned long y,
 	if(rpix == 128)
 	{
 		tcm[xtcm+1][ytcm] = 2;
-		putpixel(img, x+1, y, SDL_MapRGB(img->format, 0, nbchar, 0));
-		rowSight(img, x+1, y, xtcm+1, ytcm, nbchar);
+		if(nbchar == 1)
+		 putpixel(img, x+1, y, SDL_MapRGB(img->format, 0, 0, 0));
+		else if(nbchar == 2)
+		 putpixel(img, x+1, y, SDL_MapRGB(img->format, 45, 205, 115));
+
+		rowSight(img, x+1, y, xtcm+1, ytcm, nbchar, maxWidth);
+	}
 	}
 
-	pix = getpixel(img, x, y-1);
+	Uint32 pix = getpixel(img, x, y-1);
+	Uint8 rpix=0, gpix=0, bpix=0;
 	SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
 
 	if(rpix == 128)
 	{
 		tcm[xtcm][ytcm-1] = 2;
-		putpixel(img, x, y-1, SDL_MapRGB(img->format, 0, nbchar, 0));
-		rowSight(img, x, y-1, xtcm, ytcm-1, nbchar);
+		if(nbchar == 1)
+		 putpixel(img, x, y-1, SDL_MapRGB(img->format, 0, 0, 0));
+		else if(nbchar == 2)
+		 putpixel(img, x, y-1, SDL_MapRGB(img->format, 45, 205, 115));
+
+		rowSight(img, x, y-1, xtcm, ytcm-1, nbchar, maxWidth);
 	}
 
 	pix = getpixel(img, x, y+1);
@@ -232,8 +286,11 @@ void rowSight(SDL_Surface *img, unsigned long x, unsigned long y,
 	if(rpix == 128)
 	{
 		tcm[xtcm][ytcm+1] = 2;
-		putpixel(img, x, y+1, SDL_MapRGB(img->format, 0, nbchar, 0));
-		rowSight(img, x, y+1, xtcm, ytcm+1, nbchar);
+		if(nbchar == 1)
+		 putpixel(img, x, y+1, SDL_MapRGB(img->format, 0, 0, 0));
+		else if(nbchar == 2)
+		 putpixel(img, x, y+1, SDL_MapRGB(img->format, 45, 205, 115));
+		rowSight(img, x, y+1, xtcm, ytcm+1, nbchar, maxWidth);
 	}
 }
 

@@ -1,15 +1,29 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "SDL2/SDL.h"
 #include "seg.h"
+#include "neural_network.h"
+#include "my_math_lib.h"
+
+void hardcode(Network *n)
+{
+	n->layers[0].weights.mat[0] = -10;
+	n->layers[0].weights.mat[1] = -10;
+	n->layers[0].weights.mat[2] = 10;
+	n->layers[0].weights.mat[3] = 10;
+	n->layers[0].biais.vec[0] = 5;
+	n->layers[0].biais.vec[1] = -15;
+	n->layers[1].weights.mat[0] = -10;
+	n->layers[1].weights.mat[1] = -10;
+	n->layers[1].biais.vec[0] = 5;
+}
 
 int main(int argc, char **argv)
 {
 	//Declaring and initializing useful variables
-	char path[50] = "img_files/";
-	strcat(path, argv[1]);
-	strcat(path,".bmp");
+	char path[50] = "";
         SDL_Event ev;
 
         if(argc != 2)
@@ -17,6 +31,32 @@ int main(int argc, char **argv)
           printf("Error invalid number of arguments.");
           return EXIT_FAILURE;
         }
+
+	if(strcmp(argv[1],"xor") == 0)
+	{
+		printf("Everything work, exept back propagation.\n");
+	printf("We can hard code a neural network and he computes well.\n");
+		int arr[3] = {2, 2, 1};
+		Network n = new_null_network(2, arr, 1);
+		hardcode(&n);
+		Vector v = new_null_vec(2);
+		printf("0 xor 0 = %lf\n", forward(n, v).vec[0]);
+		vec_new_val(&v, 1, 1);
+		printf("0 xor 1 = %lf\n", forward(n, v).vec[0]);
+		vec_new_val(&v, 1, 0);
+		vec_new_val(&v, 0, 1);
+		printf("1 xor 0 = %lf\n", forward(n, v).vec[0]);
+		vec_new_val(&v, 1, 1);
+		printf("1 xor 1 = %lf\n", forward(n, v).vec[0]);
+
+
+
+				
+		return EXIT_SUCCESS;
+	}
+
+	strcat(path, argv[1]);
+	strcat(path,".bmp");
 
     	//Initializing SDL
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0)
@@ -63,6 +103,7 @@ int main(int argc, char **argv)
 	//Moving img from buffer to screen
 	SDL_UpdateWindowSurface(wd);
 
+	//A little bit of event management
         while(SDL_WaitEvent(&ev) >= 0)
           {
             switch(ev.type)

@@ -26,6 +26,7 @@ int min(int a, int b, int c);
 //Color->Greyscale->B&W + line detection
 void lineSight(SDL_Surface *img);
 //Recursive character detection
-void rowSight(SDL_Surface *img, unsigned long x, unsigned long y, int xtcm, int ytcm, unsigned int nbchar);
+void rowSight(SDL_Surface *img, unsigned long x, unsigned long y, int xtcm,
+		int ytcm, unsigned int nbchar, unsigned long maxWidth);
 
 #endif
