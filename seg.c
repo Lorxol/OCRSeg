@@ -153,12 +153,14 @@ putpixel(img, j, i, SDL_MapRGB(img->format, rpix, gpix, bpix));
 	     int pixcount = 0;
 	     for(int l=i-1-tempHeight;l<i-1;l++)
 	      {
-		 pix = getpixel(img, k, l);
-		 SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
-		 if(rpix == 128)
-		   pixcount++;
+			 pix = getpixel(img, k, l);
+		 	SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
+		 	if(rpix == 128)
+		   		pixcount++;
 	      }
-	     hist[k] = pixcount;
+	     hist[k] = pixcount; 
+		 //pixcount is the number of black pixels in pos i,j
+		 // i is FIXED and j variable
 	     sum += hist[k];
 	     pixcount = 0;
 	   }
@@ -172,36 +174,37 @@ putpixel(img, j, i, SDL_MapRGB(img->format, rpix, gpix, bpix));
 	   }
 	   int y = z;
 	   while(hist[y] >= cthreshold)
-	   {//On est dans une lettre
+	   {//Tant qu'on est dans une lettre
 		y++;
 	   }
 	   // On trace une ligne verticale bleue
 	   for(int l=i-1-tempHeight;l<i-1;l++)
 	      putpixel(img, z-1, l, SDL_MapRGB(img->format, 0, 0, 200));
 	   for(;z<y;z++)
-	    {
+	    {// On parcourt toute la portion d'image contenant la lettre
+		 //detectee
 	     for(int l=i-1-tempHeight;l<i-1;l++)
 	      {
-		 pix = getpixel(img, z, l);
-		 SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
-		 if(rpix == 128)
-		 {
-		  tcm[0][16] = 1;
-		  //putpixel(img, z, l, SDL_MapRGB(img->format, 0, nbchar, 0));
-		  rowSight(img, z, l, 0, 16, nbchar, y);
-		  transpo();
-		  /*printtcm();
-		  printf("\n");*/
+		 	pix = getpixel(img, z, l);
+		 	SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
+		 	if(rpix == 128)
+		 	{
+		  		tcm[0][16] = 1;
+		  		rowSight(img, z, l, 0, 16, nbchar, y);
+		  		transpo();
+		  		printtcm();
+		  		printf("\n");
 
 //This is the core of the program. We should stock the character detected
 //in a matrix and call the neural network right HERE
-		  cleantcm();
+		  		cleantcm();
 
-		 }
-	      }
+		 	}
+		  }
 	    }
 		  if(nbchar == 1)
-		    nbchar+= 1;
+	  		nbchar+= 1;
+		//nbchar is for alternate colors for detected letters
 		  else
 		    nbchar = 1;
 	   // On trace une ligne verticale bleue
@@ -209,15 +212,15 @@ putpixel(img, j, i, SDL_MapRGB(img->format, rpix, gpix, bpix));
 	      putpixel(img, z, l, SDL_MapRGB(img->format, 0, 0, 200));
 	   }
 	  }
-	 tempHeight = 0;
-        }
-        else if(isptl == 0)
+	  tempHeight = 0;
+      }
+      else if(isptl == 0)
         {
-	 tempHeight++;
-         isptl = 1;
+	 		tempHeight++;
+         	isptl = 1;
         }
-        else
-	 tempHeight++;
+      else
+	 		tempHeight++;
    }
 
    free(tempLine);
