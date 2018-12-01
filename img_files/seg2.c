@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include "SDL2/SDL.h"
 #include "seg.h"
-#include "scaling.h"
 
 //Declaring global variables
 int maxHeight = 0; //Maximal height of a letter in pixels
@@ -77,7 +76,7 @@ void lineSight(SDL_Surface *img)
 	   rpix = 128;
 	   gpix = 0;
 	   bpix = 0;
-           isWhiteLine = 0; //there is pixel of text in the line
+       isWhiteLine = 0; //there is pixel of text in the line
 	 }
 	 else
 	{
@@ -87,7 +86,7 @@ void lineSight(SDL_Surface *img)
 	}
 
 	//Setting new B&W colors to img
-putpixel(img, j, i, SDL_MapRGB(img->format, rpix, gpix, bpix));
+		putpixel(img, j, i, SDL_MapRGB(img->format, rpix, gpix, bpix));
 
 	}
 
@@ -154,12 +153,14 @@ putpixel(img, j, i, SDL_MapRGB(img->format, rpix, gpix, bpix));
 	     int pixcount = 0;
 	     for(int l=i-1-tempHeight;l<i-1;l++)
 	      {
-		 pix = getpixel(img, k, l);
-		 SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
-		 if(rpix == 128)
-		   pixcount++;
+			 pix = getpixel(img, k, l);
+		 	SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
+		 	if(rpix == 128)
+		   		pixcount++;
 	      }
-	     hist[k] = pixcount;
+	     hist[k] = pixcount; 
+		 //pixcount is the number of black pixels in pos i,j
+		 // i is FIXED and j variable
 	     sum += hist[k];
 	     pixcount = 0;
 	   }
@@ -173,59 +174,119 @@ putpixel(img, j, i, SDL_MapRGB(img->format, rpix, gpix, bpix));
 	   }
 	   int y = z;
 	   while(hist[y] >= cthreshold)
-	   {//On est dans une lettre
+	   {//Tant qu'on est dans une lettre
 		y++;
 	   }
 	   // On trace une ligne verticale bleue
 	   for(int l=i-1-tempHeight;l<i-1;l++)
 	      putpixel(img, z-1, l, SDL_MapRGB(img->format, 0, 0, 200));
 
-	  /* int dim=0;
-	   if((int)tempHeight>y-z)
-			   dim = (int)tempHeight;
+
+
+
+	   int dim=0,up=0,down=0,left=0,right=0;
+	   int fini=0;
+
+	   if(tempHeight > y-z)
+			   dim = tempHeight;
 	   else
 			   dim = y-z;
+	   //this matrix will contain current character
+	   int *mat = calloc((dim+1)*(dim+1),sizeof(int));
 
-	   	int *matrix = calloc((dim+1)*(dim+1),sizeof(int));
- 		int *transpo = calloc((dim+1)*(dim+1),sizeof(int));
 
-	   for(;z<y;z++)
-	    {
-	    	for(int l=i-1-tempHeight;l<i-1;l++)
-	      	{
-		 		pix = getpixel(img, z, l);
-		 		SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
-				if(rpix == 128)
-						*(matrix+dim*(y-z)+l) = 1;
-				else
-						*(matrix+dim*(y-z)+l) = 0;
+	   //These 4 loops determine the bornes of the character
+	   for(int b=z;b<y && fini==0;b++)
+	    {// On parcourt toute la portion d'image contenant la lettre
+		 //detectee
+	     for(int l=i-1-tempHeight;l<i-1 && fini==0;l++)
+	      {
+		 	pix = getpixel(img, b, l);
+		 	SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
+		 	if(rpix == 128)
+		 	{
+		  		left = b;
+		  		fini=1;
+		 	}
+		  }
+	    }
+	    fini=0;
 
-			}
+		for(int b=y;b>z && fini==0;b--)
+	    {// On parcourt toute la portion d'image contenant la lettre
+		 //detectee
+	     for(int l=i-1-tempHeight;l<i-1 && fini==0;l++)
+	      {
+		 	pix = getpixel(img, b, l);
+		 	SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
+		 	if(rpix == 128)
+		 	{
+		  		right = b;
+		  		fini=1;
+		 	}
+		  }
+	    }
+	    fini=0;
+
+		for(int l=i-1-tempHeight;l<i-1 && fini==0;l++)
+	    {// On parcourt toute la portion d'image contenant la lettre
+		 //detectee
+	     for(int b=z;b<y && fini==0;b++)
+	      {
+		 	pix = getpixel(img, b, l);
+		 	SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
+		 	if(rpix == 128)
+		 	{
+		  		down = l;
+		  		fini=1;
+		 	}
+		  }
+	    }
+	    fini=0;
+
+		for(int l=i-1;l>i-1-tempHeight && fini==0;l--)
+	    {// On parcourt toute la portion d'image contenant la lettre
+		 //detectee
+	     for(int b=z;b<y && fini==0;b++)
+	      {
+		 	pix = getpixel(img, b, l);
+		 	SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
+		 	if(rpix == 128)
+		 	{
+		  		up = l;
+		  		fini=1;
+		 	}
+		  }
 	    }
 
-	   transpose(matrix,dim,dim,transpo);
-	   printmat(dim,dim,transpo);
-	   printf("\n\n");
-	   	free(matrix);
-		free(transpo);*/
-		if(nbchar == 1)
-		    nbchar+= 1;
-		else
+
+
+		printf("up: %ld down: %ld left:%ld  right:%ld",up,down,left,right);
+		//cleantcm();
+		//prittcm();
+		printf("\n");
+	   	free(mat);
+
+
+		  if(nbchar == 1)
+	  		nbchar+= 1;
+		//nbchar is for alternate colors for detected letters
+		  else
 		    nbchar = 1;
 	   // On trace une ligne verticale bleue
 	   for(int l=i-1-tempHeight;l<i-1;l++)
 	      putpixel(img, z, l, SDL_MapRGB(img->format, 0, 0, 200));
 	   }
 	  }
-	 tempHeight = 0;
-        }
-        else if(isptl == 0)
+	  tempHeight = 0;
+      }
+      else if(isptl == 0)
         {
-	 tempHeight++;
-         isptl = 1;
+	 		tempHeight++;
+         	isptl = 1;
         }
-        else
-	 tempHeight++;
+      else
+	 		tempHeight++;
    }
 
    free(tempLine);
@@ -406,13 +467,17 @@ void printtcm()
 	}
 }
 
-void transpose(int *m, int rows, int cols, int *r)
+void transpo()
 {
-    for(int i=0;i<rows;i++)
- 	{
-   for(int j=cols;j>0;j--)
-   {
-     *(r+j*rows+i) = *(m+i*cols+j);
-   } 
- }
+	int temptcm[32][32];
+	for(int i=0;i<32;i++)
+	{
+		for(int j=0;j<32;j++)
+			temptcm[i][j] = tcm[i][j];
+	}
+	for(int i=0;i<32;i++)
+	{
+		for(int j=0;j<32;j++)
+			tcm[i][j] = temptcm[j][i];
+	}
 }

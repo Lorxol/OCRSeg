@@ -17,7 +17,8 @@ void putpixel(SDL_Surface *surface, int x, int y, Uint32 pixel);
 void cleantcm();
 void printtcm();
 //Because I suck at coding
-void transpo();
+void transpose(int *m, int rows, int cols, int *r);
+
 
 //Obvious
 int max(int a, int b, int c);

@@ -33,7 +33,6 @@ void scaledown(const int dim1, const int dim2, const int *matrix, int *sm)
 	if(spacement == 1)
 			spacement++;
 	printf("space:%d\n",spacement);
-	const int diffdim = dim1-dim2;
 	int *temp = calloc((dim1+1)*(dim2+1),sizeof(int));
 	int diffcounter=0;
 	// sm means scaledmat which is the resultant matrix
