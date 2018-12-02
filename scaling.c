@@ -12,6 +12,8 @@ void printmat(int dim1, int dim2, const int *mat)
 }
 
 
+
+
 void scale(const int dim1, const int dim2, const int *matrix, int *sm)
 {
 	//Scale a squared matrix from dim1 to dim2
@@ -32,9 +34,7 @@ void scaledown(const int dim1, const int dim2, const int *matrix, int *sm)
 	int spacement = dim1/((dim1-dim2));
 	if(spacement == 1)
 			spacement++;
-	printf("space:%d\n",spacement);
 	int *temp = calloc((dim1+1)*(dim2+1),sizeof(int));
-	int diffcounter=0;
 	// sm means scaledmat which is the resultant matrix
 	
 	//Merging cols
@@ -46,7 +46,6 @@ void scaledown(const int dim1, const int dim2, const int *matrix, int *sm)
 			if((j+1)%spacement != 0)
 			{
 				*(temp+i*dim1+jscaled) = *(matrix+i*dim1+j);
-				diffcounter++;
 			}
 			else
 			{
@@ -54,13 +53,9 @@ void scaledown(const int dim1, const int dim2, const int *matrix, int *sm)
 				*(temp+i*dim1+jscaled) = *(matrix+i*dim1+j);
 			}
 
-		printf("i: %d  jscaled: %d temp:%d\n",i,jscaled,*(temp+i*dim1+jscaled));
 		}
 	}	
 
-	printmat(dim1,dim2,temp);
-	printf("\n\n\n");
-	diffcounter = 0;
 
 	//Merging rows
 	for(int j=0;j<dim2;j++)

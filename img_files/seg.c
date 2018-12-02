@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include "SDL2/SDL.h"
 #include "seg.h"
 #include "scaling.h"
@@ -123,21 +122,21 @@ putpixel(img, j, i, SDL_MapRGB(img->format, rpix, gpix, bpix));
 	//In this loop we detect all the characters and stock them
 	//And we finally put our text pixels in black
 	unsigned int nbchar = 1;
-	int tempHeight = 0;
+	unsigned long tempHeight = 0;
 	for(int i=0;i<img->h;i++)
 	{
          Uint8 isWhiteLine = 1;
 
-	 	for(int j=0;j<img->w;j++)
-		 {
-	  		Uint32 pix = getpixel(img, j, i);
+	 for(int j=0;j<img->w;j++)
+	 {
+	  Uint32 pix = getpixel(img, j, i);
 
-	  		SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
-			 if(rpix == 128) //If the pixel is sufficiently dark
-			{
-         		  isWhiteLine = 0; //there is pixel of text in the line
-			}
-        		  tempLine[j] = rpix;
+	  SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
+	 if(rpix == 128) //If the pixel is sufficiently dark
+	{
+           isWhiteLine = 0; //there is pixel of text in the line
+	}
+          tempLine[j] = rpix;
 	 }
 
 	if(isWhiteLine == 1)
@@ -165,48 +164,13 @@ putpixel(img, j, i, SDL_MapRGB(img->format, rpix, gpix, bpix));
 	     pixcount = 0;
 	   }
 	   //printf("Av hist : %d\n", sum/img->w);
-	   int cthreshold = 2, z=0, lengthspace=0,nbspace=0,avspace=0,lastletter=0;
-
-		while(z< img->w)
-	    {
-	   		while(hist[z] < cthreshold)
-	   		{//On parcourt les blancs
-				z++;
-				lengthspace++;
-
-	  		 }
-			nbspace++;
-	   		while(hist[z] >= cthreshold)
-	   		{//On est dans une lettre
-				z++;
-	  		 }
-		}
-
-		z=0;
-		avspace = lengthspace/nbspace;
-
-
+	   int cthreshold = 2, z=0;
 	   while(z< img->w)
 	    {
-			int savz = z;
-		   	lastletter = savz;	
-	   		while(hist[z] < cthreshold)
-	  		 {//On parcourt les blancs
-					z++;
-
-	 		  }
-
-			if(z-savz > avspace)
-			{//On est dans un espace
-
-				while(hist[savz] < cthreshold)
-	  			 {//On reparcourt l''espace
-				for(int l=i-1-tempHeight;l<i-1;l++)
-					putpixel(img, savz, l, SDL_MapRGB(img->format, 239, 208, 144));
-				savz++;
-
-	  			 }
-			}
+	   while(hist[z] < cthreshold)
+	   {//On parcourt les blancs
+		z++;
+	   }
 	   int y = z;
 	   while(hist[y] >= cthreshold)
 	   {//On est dans une lettre
@@ -216,50 +180,44 @@ putpixel(img, j, i, SDL_MapRGB(img->format, rpix, gpix, bpix));
 	   for(int l=i-1-tempHeight;l<i-1;l++)
 	      putpixel(img, z-1, l, SDL_MapRGB(img->format, 0, 0, 200));
 
-	   	int dim;
-	   	if(tempHeight > y-z)
-				dim = tempHeight;
-		else
-				dim = y-z;
-		int *mat = calloc(dim*dim+ dim, sizeof(int));
-		int *transpo = calloc(25*25+25, sizeof(int));
+	   int dim=0;
+	   if((int)tempHeight>y-z)
+			   dim = (int)tempHeight;
+	   else
+			   dim = y-z;
+
+	   	int *matrix = calloc((dim+1)*(dim+1),sizeof(int));
+ 		int *transpo = calloc((dim+1)*(dim+1),sizeof(int));
 
 	   for(;z<y;z++)
 	    {
-	     for(int l=i-1-tempHeight;l<i-1;l++)
-	      {
-		 	pix = getpixel(img, z, l);
-		 	SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
-		 	if(rpix == 128)
-		 	{
-					*(mat+(dim-(i-1-l))*dim+dim-(y-z)) = 1;
+	    	for(int l=i-1-tempHeight;l<i-1;l++)
+	      	{
+		 		pix = getpixel(img, z, l);
+		 		SDL_GetRGB(pix, img->format, &rpix, &gpix, &bpix);
+				if(rpix == 128)
+						*(matrix+dim*(y-z)+l) = 1;
+				else
+						*(matrix+dim*(y-z)+l) = 0;
 
-			 }
-	      }
+			}
 	    }
 
-
-	   	//scale(dim,25,mat,transpo);
-		printmat(dim,dim,mat);
+	   transpose(matrix,dim,dim,transpo);
+	   //scale(dim,25,transpo,matrix);
+	   printmat(dim,dim,transpo);
+	   printf("\n\n");
+	   	free(matrix);
 		free(transpo);
-	   	free(mat);
-		  if(nbchar == 1)
+		if(nbchar == 1)
 		    nbchar+= 1;
-		  else
+		else
 		    nbchar = 1;
 	   // On trace une ligne verticale bleue
 	   for(int l=i-1-tempHeight;l<i-1;l++)
 	      putpixel(img, z, l, SDL_MapRGB(img->format, 0, 0, 200));
 	   }
-
-		for(;lastletter<img->w;lastletter++)
-		{
-		for(int l=i-1-tempHeight;l<i-1;l++)
-	      	putpixel(img, lastletter-1, l, SDL_MapRGB(img->format, 0, 0, 255));
-		}
-
 	  }
-	
 	 tempHeight = 0;
         }
         else if(isptl == 0)
@@ -449,17 +407,13 @@ void printtcm()
 	}
 }
 
-void transpo()
+void transpose(int *m, int rows, int cols, int *r)
 {
-	int temptcm[32][32];
-	for(int i=0;i<32;i++)
-	{
-		for(int j=0;j<32;j++)
-			temptcm[i][j] = tcm[i][j];
-	}
-	for(int i=0;i<32;i++)
-	{
-		for(int j=0;j<32;j++)
-			tcm[i][j] = temptcm[j][i];
-	}
+    for(int i=0;i<rows;i++)
+ 	{
+   for(int j=cols;j>0;j--)
+   {
+     *(r+j*rows+i) = *(m+i*cols+j);
+   } 
+ }
 }
